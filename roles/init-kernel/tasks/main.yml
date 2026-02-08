@@ -87,11 +87,18 @@
     mode: "0644"
   register: _ops_ssh_override
 
+- name: 获取 sshd 主进程 PID
+  ansible.builtin.shell:
+    cmd: "systemctl show {{ _ops_ssh_service }} --property=MainPID | cut -d= -f2"
+  register: _ops_sshd_pid
+  changed_when: false
+
 - name: 获取 sshd 主进程实际 Max open files 硬限制
   ansible.builtin.shell:
-    cmd: "cat /proc/$(systemctl show {{ _ops_ssh_service }} --property=MainPID --value)/limits | awk '/Max open files/{print $5}'"
+    cmd: "awk '/Max open files/{print $5}' /proc/{{ _ops_sshd_pid.stdout | trim }}/limits"
   register: _ops_sshd_actual_nofile
   changed_when: false
+  when: _ops_sshd_pid.stdout | trim | int > 0
 
 - name: 重载 systemd 并重启 SSH 服务
   ansible.builtin.systemd:
@@ -100,7 +107,8 @@
     daemon_reload: true
   when: >
     _ops_ssh_override.changed or
-    _ops_sshd_actual_nofile.stdout | trim != _ops_nofile_hard | string
+    _ops_sshd_actual_nofile is skipped or
+    _ops_sshd_actual_nofile.stdout | default('0') | trim != _ops_nofile_hard | string
 
 # =============================================================================
 # PAM pam_limits.so 确认（Debian 系）
