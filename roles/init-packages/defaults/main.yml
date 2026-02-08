@@ -1,5 +1,11 @@
 ---
 # init-packages defaults
+
+# YUM 仓库管理（设为 true 则由 Ansible 接管仓库配置）
+ops_repo_managed: false
+ops_rocky_mirror: "https://dl.rockylinux.org"
+ops_epel_mirror: "https://dl.fedoraproject.org/pub"
+
 ops_packages_install:
   - vim-enhanced
   - curl
@@ -46,3 +52,9 @@ ops_docker_packages:
   - containerd.io
   - docker-buildx-plugin
   - docker-compose-plugin
+
+# Node Exporter（默认关闭）
+ops_node_exporter_enabled: false
+ops_node_exporter_version: "1.9.1"
+ops_node_exporter_download_url: "https://github.com/prometheus/node_exporter/releases/download/v{{ ops_node_exporter_version }}/node_exporter-{{ ops_node_exporter_version }}.linux-amd64.tar.gz"
+ops_node_exporter_listen: ":9100"

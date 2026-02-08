@@ -1,0 +1,11 @@
+# Managed by ops-os-init — EPEL 仓库
+# 镜像地址通过 ops_epel_mirror 变量控制
+
+[epel]
+name=Extra Packages for Enterprise Linux $releasever - $basearch
+baseurl={{ ops_epel_mirror }}/epel/$releasever/Everything/$basearch/
+gpgcheck=1
+enabled=1
+countme=1
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-EPEL-$releasever

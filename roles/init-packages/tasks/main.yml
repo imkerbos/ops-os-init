@@ -3,10 +3,52 @@
 # init-packages — 包管理
 # =============================================================================
 
+- name: 部署 Rocky 基础仓库配置
+  ansible.builtin.template:
+    src: rocky.repo.j2
+    dest: /etc/yum.repos.d/rocky.repo
+    owner: root
+    group: root
+    mode: "0644"
+  when: ops_repo_managed
+
+- name: 移除默认 Rocky 仓库文件（避免冲突）
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/yum.repos.d/rocky-addons.repo
+    - /etc/yum.repos.d/rocky-devel.repo
+    - /etc/yum.repos.d/rocky-extras.repo
+  when: ops_repo_managed
+
 - name: 安装 EPEL 仓库
   ansible.builtin.dnf:
     name: epel-release
     state: present
+
+- name: 部署 EPEL 仓库配置
+  ansible.builtin.template:
+    src: epel.repo.j2
+    dest: /etc/yum.repos.d/epel.repo
+    owner: root
+    group: root
+    mode: "0644"
+  when: ops_repo_managed
+
+- name: 移除 EPEL 默认仓库文件（避免冲突）
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/yum.repos.d/epel-cisco-openh264.repo
+    - /etc/yum.repos.d/epel-testing.repo
+  when: ops_repo_managed
+
+- name: 清理 DNF 缓存
+  ansible.builtin.command: dnf clean all
+  changed_when: false
+  when: ops_repo_managed
 
 - name: 安装运维工具包
   ansible.builtin.dnf:
@@ -68,3 +110,79 @@
   loop_control:
     label: "{{ item.name }}"
   when: ops_docker_enabled
+
+# --- Node Exporter 安装（仅 ops_node_exporter_enabled: true 时执行）---
+
+- name: 检查 node_exporter 是否已安装
+  ansible.builtin.stat:
+    path: /usr/local/bin/node_exporter
+  register: _node_exporter_bin
+  when: ops_node_exporter_enabled
+
+- name: 创建 node_exporter 系统用户
+  ansible.builtin.user:
+    name: node_exporter
+    system: true
+    shell: /usr/sbin/nologin
+    create_home: false
+  when: ops_node_exporter_enabled
+
+- name: 下载 node_exporter
+  ansible.builtin.unarchive:
+    src: "{{ ops_node_exporter_download_url }}"
+    dest: /tmp
+    remote_src: true
+  when: ops_node_exporter_enabled and not (_node_exporter_bin.stat.exists | default(false))
+
+- name: 安装 node_exporter 二进制文件
+  ansible.builtin.copy:
+    src: "/tmp/node_exporter-{{ ops_node_exporter_version }}.linux-amd64/node_exporter"
+    dest: /usr/local/bin/node_exporter
+    owner: root
+    group: root
+    mode: "0755"
+    remote_src: true
+  when: ops_node_exporter_enabled and not (_node_exporter_bin.stat.exists | default(false))
+  notify: Restart node_exporter
+
+- name: 清理 node_exporter 临时文件
+  ansible.builtin.file:
+    path: "/tmp/node_exporter-{{ ops_node_exporter_version }}.linux-amd64"
+    state: absent
+  when: ops_node_exporter_enabled
+
+- name: 部署 node_exporter systemd 服务
+  ansible.builtin.copy:
+    content: |
+      # Managed by ops-os-init — Node Exporter
+      [Unit]
+      Description=Prometheus Node Exporter
+      Documentation=https://github.com/prometheus/node_exporter
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Type=simple
+      User=node_exporter
+      Group=node_exporter
+      ExecStart=/usr/local/bin/node_exporter \
+        --web.listen-address={{ ops_node_exporter_listen }}
+      Restart=on-failure
+      RestartSec=5s
+
+      [Install]
+      WantedBy=multi-user.target
+    dest: /etc/systemd/system/node_exporter.service
+    owner: root
+    group: root
+    mode: "0644"
+  when: ops_node_exporter_enabled
+  notify: Restart node_exporter
+
+- name: 启动并启用 node_exporter 服务
+  ansible.builtin.systemd:
+    name: node_exporter
+    state: started
+    enabled: true
+    daemon_reload: true
+  when: ops_node_exporter_enabled

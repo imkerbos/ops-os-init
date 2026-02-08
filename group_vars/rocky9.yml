@@ -16,7 +16,8 @@ ops_timezone: "Asia/Shanghai"
 # Locale
 ops_locale: "en_US.UTF-8"
 
-# DNS 服务器
+# DNS 服务器（ops_dns_managed: true 时才覆盖系统 DNS，内网机器请保持 false）
+ops_dns_managed: false
 ops_dns_servers:
   - "8.8.8.8"
   - "1.1.1.1"
@@ -280,6 +281,11 @@ ops_services_enable:
 # 包管理 (init-packages)
 # -----------------------------------------------------------------------------
 
+# YUM 仓库管理（腾讯云等内网镜像环境需开启，切换到公网源）
+ops_repo_managed: true
+ops_rocky_mirror: "https://dl.rockylinux.org"
+ops_epel_mirror: "https://dl.fedoraproject.org/pub"
+
 ops_packages_install:
   - vim-enhanced
   - curl
@@ -317,6 +323,11 @@ ops_packages_remove:
   - cockpit-bridge
   - PackageKit
   - PackageKit-command-not-found
+
+# Node Exporter（Prometheus 监控采集器）
+ops_node_exporter_enabled: true
+ops_node_exporter_version: "1.9.1"
+ops_node_exporter_listen: ":9100"
 
 # -----------------------------------------------------------------------------
 # 日志审计 (init-audit)

@@ -34,6 +34,7 @@
     owner: root
     group: root
     mode: "0644"
+  when: ops_dns_managed
 
 - name: 安装 chrony
   ansible.builtin.dnf:

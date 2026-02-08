@@ -1,0 +1,29 @@
+# Managed by ops-os-init — Rocky Linux 9 基础仓库
+# 镜像地址通过 ops_rocky_mirror 变量控制
+
+[baseos]
+name=Rocky Linux $releasever - BaseOS
+baseurl={{ ops_rocky_mirror }}/rocky/$releasever/BaseOS/$basearch/os/
+gpgcheck=1
+enabled=1
+countme=1
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
+
+[appstream]
+name=Rocky Linux $releasever - AppStream
+baseurl={{ ops_rocky_mirror }}/rocky/$releasever/AppStream/$basearch/os/
+gpgcheck=1
+enabled=1
+countme=1
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
+
+[extras]
+name=Rocky Linux $releasever - Extras
+baseurl={{ ops_rocky_mirror }}/rocky/$releasever/extras/$basearch/os/
+gpgcheck=1
+enabled=1
+countme=1
+metadata_expire=6h
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
