@@ -280,7 +280,7 @@ ops_services_enable:
   - rsyslog
   - ssh
   - cron
-  - NetworkManager
+  - systemd-networkd
 
 # -----------------------------------------------------------------------------
 # 包管理 (init-packages)
