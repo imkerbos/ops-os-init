@@ -1,10 +1,13 @@
 ---
 # init-packages defaults
 
-# YUM 仓库管理
+# YUM 仓库管理（RedHat 系）
 ops_repo_managed: true
 ops_rocky_mirror: "https://dl.rockylinux.org"
 ops_epel_mirror: "https://dl.fedoraproject.org/pub"
+
+# APT 源管理（Debian 系）
+ops_ubuntu_mirror: "http://archive.ubuntu.com/ubuntu"
 
 ops_packages_install:
   - vim-enhanced

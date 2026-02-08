@@ -3,11 +3,17 @@
 # init-audit — 日志审计配置
 # =============================================================================
 
-- name: 安装 audit 包
+- name: 安装 audit 包 (RedHat)
   ansible.builtin.dnf:
     name: audit
     state: present
-  when: ops_audit_enabled
+  when: ops_audit_enabled and ansible_os_family == "RedHat"
+
+- name: 安装 auditd 包 (Debian)
+  ansible.builtin.apt:
+    name: auditd
+    state: present
+  when: ops_audit_enabled and ansible_os_family == "Debian"
 
 - name: 配置 auditd.conf — max_log_file
   ansible.builtin.lineinfile:

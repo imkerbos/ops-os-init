@@ -1,0 +1,7 @@
+# Managed by ops-os-init — Ubuntu APT 源配置
+# 镜像地址通过 ops_ubuntu_mirror 变量控制
+
+deb {{ ops_ubuntu_mirror }} {{ ansible_distribution_release }} main restricted universe multiverse
+deb {{ ops_ubuntu_mirror }} {{ ansible_distribution_release }}-updates main restricted universe multiverse
+deb {{ ops_ubuntu_mirror }} {{ ansible_distribution_release }}-backports main restricted universe multiverse
+deb {{ ops_ubuntu_mirror }} {{ ansible_distribution_release }}-security main restricted universe multiverse

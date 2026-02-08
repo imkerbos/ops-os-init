@@ -93,19 +93,55 @@
     group: root
     mode: "0644"
 
-- name: 启用 authselect with-faillock
+# --- authselect / PAM faillock 分支 ---
+
+- name: 启用 authselect with-faillock (RedHat)
   ansible.builtin.command:
     cmd: authselect select sssd with-faillock with-pamaccess --force
   register: authselect_result
   changed_when: "'Profile changed' in authselect_result.stdout or 'already selected' not in authselect_result.stdout"
   failed_when: authselect_result.rc != 0
+  when: ansible_os_family == "RedHat"
 
-- name: 限制 su 仅 wheel 组用户
+- name: 配置 PAM faillock — common-auth (Debian)
+  ansible.builtin.lineinfile:
+    path: /etc/pam.d/common-auth
+    insertbefore: '^auth\s+\[success=1'
+    line: "auth\trequired\tpam_faillock.so preauth silent deny={{ ops_faillock_deny }} unlock_time={{ ops_faillock_unlock_time }} fail_interval={{ ops_faillock_fail_interval }}"
+    regexp: '^auth\s+required\s+pam_faillock\.so\s+preauth'
+  when: ansible_os_family == "Debian"
+
+- name: 配置 PAM faillock — common-auth authfail (Debian)
+  ansible.builtin.lineinfile:
+    path: /etc/pam.d/common-auth
+    insertafter: '^auth\s+\[success=1'
+    line: "auth\t[default=die]\tpam_faillock.so authfail deny={{ ops_faillock_deny }} unlock_time={{ ops_faillock_unlock_time }} fail_interval={{ ops_faillock_fail_interval }}"
+    regexp: '^auth\s+\[default=die\]\s+pam_faillock\.so\s+authfail'
+  when: ansible_os_family == "Debian"
+
+- name: 配置 PAM faillock — common-account (Debian)
+  ansible.builtin.lineinfile:
+    path: /etc/pam.d/common-account
+    insertbefore: BOF
+    line: "account\trequired\tpam_faillock.so"
+    regexp: '^account\s+required\s+pam_faillock\.so'
+  when: ansible_os_family == "Debian"
+
+# --- su 限制 ---
+
+- name: 限制 su 仅 wheel 组用户 (RedHat)
   ansible.builtin.lineinfile:
     path: /etc/pam.d/su
     regexp: '^#?\s*auth\s+required\s+pam_wheel\.so\s+use_uid'
     line: "auth\t\trequired\tpam_wheel.so use_uid"
-  when: ops_su_restrict_wheel
+  when: ops_su_restrict_wheel and ansible_os_family == "RedHat"
+
+- name: 限制 su 仅 sudo 组用户 (Debian)
+  ansible.builtin.lineinfile:
+    path: /etc/pam.d/su
+    regexp: '^#?\s*auth\s+required\s+pam_wheel\.so\s+'
+    line: "auth\t\trequired\tpam_wheel.so use_uid group=sudo"
+  when: ops_su_restrict_wheel and ansible_os_family == "Debian"
 
 - name: 部署全局安全环境变量（umask + TMOUT）
   ansible.builtin.template:

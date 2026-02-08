@@ -3,6 +3,10 @@
 # init-packages — 包管理
 # =============================================================================
 
+# =============================================================================
+# YUM 仓库管理（RedHat 系）
+# =============================================================================
+
 - name: 部署 Rocky 基础仓库配置
   ansible.builtin.template:
     src: rocky.repo.j2
@@ -10,7 +14,7 @@
     owner: root
     group: root
     mode: "0644"
-  when: ops_repo_managed
+  when: ops_repo_managed and ansible_os_family == "RedHat"
 
 - name: 移除默认 Rocky 仓库文件（避免冲突）
   ansible.builtin.file:
@@ -20,12 +24,13 @@
     - /etc/yum.repos.d/rocky-addons.repo
     - /etc/yum.repos.d/rocky-devel.repo
     - /etc/yum.repos.d/rocky-extras.repo
-  when: ops_repo_managed
+  when: ops_repo_managed and ansible_os_family == "RedHat"
 
 - name: 安装 EPEL 仓库
   ansible.builtin.dnf:
     name: epel-release
     state: present
+  when: ansible_os_family == "RedHat"
 
 - name: 部署 EPEL 仓库配置
   ansible.builtin.template:
@@ -34,7 +39,7 @@
     owner: root
     group: root
     mode: "0644"
-  when: ops_repo_managed
+  when: ops_repo_managed and ansible_os_family == "RedHat"
 
 - name: 移除 EPEL 默认仓库文件（避免冲突）
   ansible.builtin.file:
@@ -43,26 +48,67 @@
   loop:
     - /etc/yum.repos.d/epel-cisco-openh264.repo
     - /etc/yum.repos.d/epel-testing.repo
-  when: ops_repo_managed
+  when: ops_repo_managed and ansible_os_family == "RedHat"
 
 - name: 清理 DNF 缓存
   ansible.builtin.command: dnf clean all
   changed_when: false
-  when: ops_repo_managed
+  when: ops_repo_managed and ansible_os_family == "RedHat"
 
-- name: 安装运维工具包
+# =============================================================================
+# APT 源管理（Debian 系）
+# =============================================================================
+
+- name: 部署 APT 源配置
+  ansible.builtin.template:
+    src: sources.list.j2
+    dest: /etc/apt/sources.list
+    owner: root
+    group: root
+    mode: "0644"
+  when: ops_repo_managed and ansible_os_family == "Debian"
+
+- name: 更新 APT 缓存
+  ansible.builtin.apt:
+    update_cache: true
+  changed_when: false
+  when: ops_repo_managed and ansible_os_family == "Debian"
+
+# =============================================================================
+# 安装 / 移除包
+# =============================================================================
+
+- name: 安装运维工具包 (RedHat)
   ansible.builtin.dnf:
     name: "{{ ops_packages_install }}"
     state: present
+  when: ansible_os_family == "RedHat"
 
-- name: 移除高风险默认包
+- name: 安装运维工具包 (Debian)
+  ansible.builtin.apt:
+    name: "{{ ops_packages_install }}"
+    state: present
+    update_cache: true
+  when: ansible_os_family == "Debian"
+
+- name: 移除高风险默认包 (RedHat)
   ansible.builtin.dnf:
     name: "{{ ops_packages_remove }}"
     state: absent
+  when: ansible_os_family == "RedHat"
 
-# --- Docker 安装（仅 ops_docker_enabled: true 时执行）---
+- name: 移除高风险默认包 (Debian)
+  ansible.builtin.apt:
+    name: "{{ ops_packages_remove }}"
+    state: absent
+    purge: true
+  when: ansible_os_family == "Debian"
 
-- name: 移除系统自带的旧版容器包
+# =============================================================================
+# Docker 安装（仅 ops_docker_enabled: true 时执行）
+# =============================================================================
+
+- name: 移除系统自带的旧版容器包 (RedHat)
   ansible.builtin.dnf:
     name:
       - docker
@@ -76,7 +122,18 @@
       - podman
       - buildah
     state: absent
-  when: ops_docker_enabled
+  when: ops_docker_enabled and ansible_os_family == "RedHat"
+
+- name: 移除系统自带的旧版容器包 (Debian)
+  ansible.builtin.apt:
+    name:
+      - docker
+      - docker-engine
+      - docker.io
+      - containerd
+      - runc
+    state: absent
+  when: ops_docker_enabled and ansible_os_family == "Debian"
 
 - name: 添加 Docker 官方 YUM 仓库
   ansible.builtin.yum_repository:
@@ -86,13 +143,33 @@
     gpgcheck: true
     gpgkey: https://download.docker.com/linux/centos/gpg
     enabled: true
-  when: ops_docker_enabled
+  when: ops_docker_enabled and ansible_os_family == "RedHat"
 
-- name: 安装 Docker CE
+- name: 安装 Docker GPG 密钥 (Debian)
+  ansible.builtin.apt_key:
+    url: https://download.docker.com/linux/ubuntu/gpg
+    state: present
+  when: ops_docker_enabled and ansible_os_family == "Debian"
+
+- name: 添加 Docker 官方 APT 仓库 (Debian)
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64] https://download.docker.com/linux/ubuntu {{ ansible_distribution_release }} stable"
+    state: present
+    filename: docker-ce
+  when: ops_docker_enabled and ansible_os_family == "Debian"
+
+- name: 安装 Docker CE (RedHat)
   ansible.builtin.dnf:
     name: "{{ ops_docker_packages }}"
     state: present
-  when: ops_docker_enabled
+  when: ops_docker_enabled and ansible_os_family == "RedHat"
+
+- name: 安装 Docker CE (Debian)
+  ansible.builtin.apt:
+    name: "{{ ops_docker_packages }}"
+    state: present
+    update_cache: true
+  when: ops_docker_enabled and ansible_os_family == "Debian"
 
 - name: 启动并启用 Docker 服务
   ansible.builtin.systemd:
@@ -111,7 +188,9 @@
     label: "{{ item.name }}"
   when: ops_docker_enabled
 
-# --- Node Exporter 安装（仅 ops_node_exporter_enabled: true 时执行）---
+# =============================================================================
+# Node Exporter 安装（仅 ops_node_exporter_enabled: true 时执行）
+# =============================================================================
 
 - name: 检查 node_exporter 是否已安装
   ansible.builtin.stat:

@@ -1,7 +1,16 @@
 ---
 # =============================================================================
-# ops-os-init 全局变量 — Rocky Linux 9
+# ops-os-init 全局变量 — Ubuntu 22.04
 # =============================================================================
+
+# -----------------------------------------------------------------------------
+# Ansible 连接配置
+# -----------------------------------------------------------------------------
+
+ansible_user: root
+# ansible_port: 22
+# ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+# ansible_become_password: "{{ vault_become_password }}"
 
 # -----------------------------------------------------------------------------
 # 基础系统配置 (init-facts)
@@ -166,7 +175,7 @@ ops_users:
   - name: op
     shell: /bin/bash
     groups:
-      - wheel
+      - sudo
     sudo_nopasswd: true
     ssh_key_file: op.pub
     home_mode: "0750"
@@ -174,11 +183,11 @@ ops_users:
 ops_users_lock:
   - lp
   - sync
-  - shutdown
-  - halt
-  - operator
   - games
-  - ftp
+  - gnats
+  - irc
+  - list
+  - news
 
 # 密码老化 (/etc/login.defs)
 ops_password_max_days: 90
@@ -260,34 +269,29 @@ ops_services_disable:
   - avahi-daemon
   - ModemManager
   - bluetooth
-  - kdump
-  - iscsi
-  - iscsid
+  - snapd
   - multipathd
   - rpcbind
   - nfs-client.target
   - remote-fs.target
-  - sssd
-  - sssd-kcm
 
 ops_services_enable:
-  - chronyd
+  - chrony
   - rsyslog
-  - sshd
-  - crond
+  - ssh
+  - cron
   - NetworkManager
 
 # -----------------------------------------------------------------------------
 # 包管理 (init-packages)
 # -----------------------------------------------------------------------------
 
-# YUM 仓库管理（腾讯云等内网镜像环境需开启，切换到公网源）
+# APT 源管理
 ops_repo_managed: true
-ops_rocky_mirror: "https://dl.rockylinux.org"
-ops_epel_mirror: "https://dl.fedoraproject.org/pub"
+ops_ubuntu_mirror: "http://archive.ubuntu.com/ubuntu"
 
 ops_packages_install:
-  - vim-enhanced
+  - vim
   - curl
   - wget
   - net-tools
@@ -297,7 +301,7 @@ ops_packages_install:
   - sysstat
   - strace
   - tcpdump
-  - bind-utils
+  - dnsutils
   - telnet
   - unzip
   - tar
@@ -308,21 +312,21 @@ ops_packages_install:
   - chrony
   - logrotate
   - psmisc
-  - procps-ng
-  - iproute
-  - iputils
+  - procps
+  - iproute2
+  - iputils-ping
   - tmux
-  - yum-utils
-  - audit
-  - libpwquality
+  - apt-utils
+  - auditd
+  - libpam-pwquality
+  - gnupg
+  - ca-certificates
+  - software-properties-common
 
 ops_packages_remove:
-  - cockpit
-  - cockpit-ws
-  - cockpit-system
-  - cockpit-bridge
-  - PackageKit
-  - PackageKit-command-not-found
+  - snapd
+  - popularity-contest
+  - ubuntu-advantage-tools
 
 # Node Exporter（Prometheus 监控采集器）
 ops_node_exporter_enabled: true
@@ -357,7 +361,8 @@ ops_audit_rules:
   # 网络配置变更
   - -w /etc/hosts -p wa -k system-network
   - -w /etc/resolv.conf -p wa -k system-network
-  - -w /etc/sysconfig/network -p wa -k system-network
+  - -w /etc/network/interfaces -p wa -k system-network
+  - -w /etc/netplan/ -p wa -k system-network
 
   # 登录/登出事件
   - -w /var/log/lastlog -p wa -k logins
@@ -417,4 +422,4 @@ ops_file_permissions:
   # Cron
   - { path: /etc/crontab, owner: root, group: root, mode: "0600" }
   # GRUB
-  - { path: /boot/grub2/grub.cfg, owner: root, group: root, mode: "0600" }
+  - { path: /boot/grub/grub.cfg, owner: root, group: root, mode: "0600" }

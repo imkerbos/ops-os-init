@@ -12,7 +12,9 @@
   ansible.builtin.timezone:
     name: "{{ ops_timezone }}"
 
-- name: 设置 locale 配置文件
+# --- Locale 配置（RedHat / Debian 分支）---
+
+- name: 设置 locale 配置文件 (RedHat)
   ansible.builtin.copy:
     content: |
       LANG={{ ops_locale }}
@@ -21,11 +23,27 @@
     owner: root
     group: root
     mode: "0644"
+  when: ansible_os_family == "RedHat"
 
-- name: 应用 locale 设置
+- name: 应用 locale 设置 (RedHat)
   ansible.builtin.command:
     cmd: localectl set-locale LANG={{ ops_locale }}
   changed_when: false
+  when: ansible_os_family == "RedHat"
+
+- name: 生成 locale (Debian)
+  ansible.builtin.command:
+    cmd: locale-gen {{ ops_locale }}
+  changed_when: false
+  when: ansible_os_family == "Debian"
+
+- name: 应用 locale 设置 (Debian)
+  ansible.builtin.command:
+    cmd: update-locale LANG={{ ops_locale }} LC_ALL={{ ops_locale }}
+  changed_when: false
+  when: ansible_os_family == "Debian"
+
+# --- DNS ---
 
 - name: 配置 DNS 解析
   ansible.builtin.template:
@@ -36,30 +54,68 @@
     mode: "0644"
   when: ops_dns_managed
 
-- name: 安装 chrony
+# --- Chrony NTP ---
+
+- name: 安装 chrony (RedHat)
   ansible.builtin.dnf:
     name: chrony
     state: present
+  when: ansible_os_family == "RedHat"
 
-- name: 配置 chrony NTP 服务
+- name: 安装 chrony (Debian)
+  ansible.builtin.apt:
+    name: chrony
+    state: present
+    update_cache: true
+  when: ansible_os_family == "Debian"
+
+- name: 配置 chrony NTP 服务 (RedHat)
   ansible.builtin.template:
     src: chrony.conf.j2
     dest: /etc/chrony.conf
     owner: root
     group: root
     mode: "0644"
+  when: ansible_os_family == "RedHat"
   notify: Restart chronyd
 
-- name: 启动并启用 chronyd 服务
+- name: 配置 chrony NTP 服务 (Debian)
+  ansible.builtin.template:
+    src: chrony.conf.j2
+    dest: /etc/chrony/chrony.conf
+    owner: root
+    group: root
+    mode: "0644"
+  when: ansible_os_family == "Debian"
+  notify: Restart chrony
+
+- name: 启动并启用 chronyd 服务 (RedHat)
   ansible.builtin.systemd:
     name: chronyd
     state: started
     enabled: true
+  when: ansible_os_family == "RedHat"
 
-- name: 安装 rsyslog
+- name: 启动并启用 chrony 服务 (Debian)
+  ansible.builtin.systemd:
+    name: chrony
+    state: started
+    enabled: true
+  when: ansible_os_family == "Debian"
+
+# --- Rsyslog ---
+
+- name: 安装 rsyslog (RedHat)
   ansible.builtin.dnf:
     name: rsyslog
     state: present
+  when: ansible_os_family == "RedHat"
+
+- name: 安装 rsyslog (Debian)
+  ansible.builtin.apt:
+    name: rsyslog
+    state: present
+  when: ansible_os_family == "Debian"
 
 - name: 启动并启用 rsyslog 服务
   ansible.builtin.systemd:
@@ -67,10 +123,19 @@
     state: started
     enabled: true
 
-- name: 安装 logrotate
+# --- Logrotate ---
+
+- name: 安装 logrotate (RedHat)
   ansible.builtin.dnf:
     name: logrotate
     state: present
+  when: ansible_os_family == "RedHat"
+
+- name: 安装 logrotate (Debian)
+  ansible.builtin.apt:
+    name: logrotate
+    state: present
+  when: ansible_os_family == "Debian"
 
 - name: 配置 logrotate 基础参数
   ansible.builtin.copy:
