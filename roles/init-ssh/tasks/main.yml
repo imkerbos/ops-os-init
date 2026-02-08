@@ -18,8 +18,11 @@
     owner: root
     group: root
     mode: "0600"
-    validate: "sshd -t -f /dev/null -o 'Include %s'"
   notify: Restart sshd
+
+- name: 校验 sshd 完整配置
+  ansible.builtin.command: sshd -t
+  changed_when: false
 
 - name: 部署应急 SSH 配置文件
   ansible.builtin.template:
