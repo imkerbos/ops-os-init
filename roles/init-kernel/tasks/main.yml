@@ -27,7 +27,7 @@
   ansible.builtin.lineinfile:
     path: /etc/systemd/system.conf
     regexp: '^#?DefaultLimitNOFILE='
-    line: "DefaultLimitNOFILE={{ _ops_nofile_hard }}:{{ _ops_nofile_hard }}"
+    line: "DefaultLimitNOFILE={{ _ops_nofile_hard }}"
     insertafter: '^\[Manager\]'
   notify: Reload systemd
 
@@ -35,7 +35,7 @@
   ansible.builtin.lineinfile:
     path: /etc/systemd/system.conf
     regexp: '^#?DefaultLimitNPROC='
-    line: "DefaultLimitNPROC={{ _ops_nproc_hard }}:{{ _ops_nproc_hard }}"
+    line: "DefaultLimitNPROC={{ _ops_nproc_hard }}"
     insertafter: '^\[Manager\]'
   notify: Reload systemd
 
@@ -43,7 +43,7 @@
   ansible.builtin.lineinfile:
     path: /etc/systemd/user.conf
     regexp: '^#?DefaultLimitNOFILE='
-    line: "DefaultLimitNOFILE={{ _ops_nofile_hard }}:{{ _ops_nofile_hard }}"
+    line: "DefaultLimitNOFILE={{ _ops_nofile_hard }}"
     insertafter: '^\[Manager\]'
   notify: Reload systemd
 
@@ -51,7 +51,7 @@
   ansible.builtin.lineinfile:
     path: /etc/systemd/user.conf
     regexp: '^#?DefaultLimitNPROC='
-    line: "DefaultLimitNPROC={{ _ops_nproc_hard }}:{{ _ops_nproc_hard }}"
+    line: "DefaultLimitNPROC={{ _ops_nproc_hard }}"
     insertafter: '^\[Manager\]'
   notify: Reload systemd
 
@@ -79,45 +79,35 @@
     content: |
       # Managed by ops-os-init — 确保 sshd 进程有足够高的资源限制
       [Service]
-      LimitNOFILE={{ _ops_nofile_hard }}:{{ _ops_nofile_hard }}
-      LimitNPROC={{ _ops_nproc_hard }}:{{ _ops_nproc_hard }}
+      LimitNOFILE={{ _ops_nofile_hard }}
+      LimitNPROC={{ _ops_nproc_hard }}
     dest: "/etc/systemd/system/{{ _ops_ssh_service }}.service.d/limits.conf"
     owner: root
     group: root
     mode: "0644"
-  register: _ops_ssh_override
-
-- name: 获取 sshd 主进程 PID
-  ansible.builtin.shell:
-    cmd: "systemctl show {{ _ops_ssh_service }} --property=MainPID | cut -d= -f2"
-  register: _ops_sshd_pid
-  changed_when: false
-
-- name: 获取 sshd 主进程实际 Max open files 硬限制
-  ansible.builtin.shell:
-    cmd: "awk '/Max open files/{print $5}' /proc/{{ _ops_sshd_pid.stdout | trim }}/limits"
-  register: _ops_sshd_actual_nofile
-  changed_when: false
-  when: _ops_sshd_pid.stdout | trim | int > 0
-
-- name: 重载 systemd 并重启 SSH 服务
-  ansible.builtin.systemd:
-    name: "{{ _ops_ssh_service }}"
-    state: restarted
-    daemon_reload: true
-  when: >
-    _ops_ssh_override.changed or
-    _ops_sshd_actual_nofile is skipped or
-    _ops_sshd_actual_nofile.stdout | default('0') | trim != _ops_nofile_hard | string
+  notify:
+    - Reload systemd
+    - Restart sshd for limits
 
 # =============================================================================
 # PAM pam_limits.so 确认（Debian 系）
-# 确保 /etc/pam.d/common-session 中加载了 pam_limits.so
+# 确保 common-session 和 common-session-noninteractive 都加载 pam_limits.so
+# common-session: 交互式登录（SSH 直接登录）
+# common-session-noninteractive: 非交互式会话（sudo、su、cron 等）
+# 两者都必须配置，否则 limits.d 的设置不会生效
 # =============================================================================
 
-- name: 确保 PAM pam_limits.so 已启用 (Debian)
+- name: 确保 PAM pam_limits.so 已启用 - common-session (Debian)
   ansible.builtin.lineinfile:
     path: /etc/pam.d/common-session
+    regexp: '^session\s+required\s+pam_limits\.so'
+    line: "session required\tpam_limits.so"
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: 确保 PAM pam_limits.so 已启用 - common-session-noninteractive (Debian)
+  ansible.builtin.lineinfile:
+    path: /etc/pam.d/common-session-noninteractive
     regexp: '^session\s+required\s+pam_limits\.so'
     line: "session required\tpam_limits.so"
     state: present
