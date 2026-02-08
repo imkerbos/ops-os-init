@@ -20,13 +20,20 @@
     mode: "0600"
   notify: Restart sshd
 
-- name: 移除冲突的 sshd_config.d 文件
+- name: 扫描 sshd_config.d 目录下所有文件
+  ansible.builtin.find:
+    paths: /etc/ssh/sshd_config.d
+    file_type: file
+  register: _sshd_config_d_files
+
+- name: 移除非 ops-os-init 管理的 sshd_config.d 文件
   ansible.builtin.file:
-    path: "{{ item }}"
+    path: "{{ item.path }}"
     state: absent
-  loop:
-    - /etc/ssh/sshd_config.d/01-permitrootlogin.conf
-    - /etc/ssh/sshd_config.d/99-ops-init.conf
+  loop: "{{ _sshd_config_d_files.files }}"
+  loop_control:
+    label: "{{ item.path }}"
+  when: item.path | basename != '00-ops-init.conf'
   notify: Restart sshd
 
 - name: 校验 sshd 完整配置
