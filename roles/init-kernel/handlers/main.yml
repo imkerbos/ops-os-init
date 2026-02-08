@@ -1,0 +1,7 @@
+---
+# init-kernel handlers
+
+- name: Reload systemd
+  ansible.builtin.command:
+    cmd: systemctl daemon-reexec
+  changed_when: true

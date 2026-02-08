@@ -10,3 +10,60 @@
     owner: root
     group: root
     mode: "0644"
+
+# =============================================================================
+# systemd DefaultLimit 配置
+# Ubuntu/Debian 的 systemd 默认 DefaultLimitNOFILE=1024:524288，
+# 会覆盖 limits.d 的设置，必须同步配置 systemd 的默认限制。
+# Rocky/RHEL 也一并配置，确保一致性。
+# =============================================================================
+
+- name: 提取 nofile hard 限制值
+  ansible.builtin.set_fact:
+    _ops_nofile_hard: "{{ (ops_limits | selectattr('item', 'equalto', 'nofile') | selectattr('type', 'equalto', 'hard') | first).value }}"
+    _ops_nproc_hard: "{{ (ops_limits | selectattr('item', 'equalto', 'nproc') | selectattr('type', 'equalto', 'hard') | first).value }}"
+
+- name: 配置 systemd system.conf — DefaultLimitNOFILE
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/system.conf
+    regexp: '^#?DefaultLimitNOFILE='
+    line: "DefaultLimitNOFILE={{ _ops_nofile_hard }}:{{ _ops_nofile_hard }}"
+    insertafter: '^\[Manager\]'
+  notify: Reload systemd
+
+- name: 配置 systemd system.conf — DefaultLimitNPROC
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/system.conf
+    regexp: '^#?DefaultLimitNPROC='
+    line: "DefaultLimitNPROC={{ _ops_nproc_hard }}:{{ _ops_nproc_hard }}"
+    insertafter: '^\[Manager\]'
+  notify: Reload systemd
+
+- name: 配置 systemd user.conf — DefaultLimitNOFILE
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/user.conf
+    regexp: '^#?DefaultLimitNOFILE='
+    line: "DefaultLimitNOFILE={{ _ops_nofile_hard }}:{{ _ops_nofile_hard }}"
+    insertafter: '^\[Manager\]'
+  notify: Reload systemd
+
+- name: 配置 systemd user.conf — DefaultLimitNPROC
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/user.conf
+    regexp: '^#?DefaultLimitNPROC='
+    line: "DefaultLimitNPROC={{ _ops_nproc_hard }}:{{ _ops_nproc_hard }}"
+    insertafter: '^\[Manager\]'
+  notify: Reload systemd
+
+# =============================================================================
+# PAM pam_limits.so 确认（Debian 系）
+# 确保 /etc/pam.d/common-session 中加载了 pam_limits.so
+# =============================================================================
+
+- name: 确保 PAM pam_limits.so 已启用 (Debian)
+  ansible.builtin.lineinfile:
+    path: /etc/pam.d/common-session
+    regexp: '^session\s+required\s+pam_limits\.so'
+    line: "session required\tpam_limits.so"
+    state: present
+  when: ansible_os_family == "Debian"
