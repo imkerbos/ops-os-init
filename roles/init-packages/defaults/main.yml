@@ -1,8 +1,8 @@
 ---
 # init-packages defaults
 
-# YUM 仓库管理（设为 true 则由 Ansible 接管仓库配置）
-ops_repo_managed: false
+# YUM 仓库管理
+ops_repo_managed: true
 ops_rocky_mirror: "https://dl.rockylinux.org"
 ops_epel_mirror: "https://dl.fedoraproject.org/pub"
 
@@ -44,8 +44,8 @@ ops_packages_remove:
   - PackageKit
   - PackageKit-command-not-found
 
-# Docker 安装（默认关闭，docker 分组覆盖开启）
-ops_docker_enabled: false
+# Docker 安装
+ops_docker_enabled: true
 ops_docker_packages:
   - docker-ce
   - docker-ce-cli
@@ -53,8 +53,8 @@ ops_docker_packages:
   - docker-buildx-plugin
   - docker-compose-plugin
 
-# Node Exporter（默认关闭）
-ops_node_exporter_enabled: false
+# Node Exporter
+ops_node_exporter_enabled: true
 ops_node_exporter_version: "1.9.1"
 ops_node_exporter_download_url: "https://github.com/prometheus/node_exporter/releases/download/v{{ ops_node_exporter_version }}/node_exporter-{{ ops_node_exporter_version }}.linux-amd64.tar.gz"
 ops_node_exporter_listen: ":9100"

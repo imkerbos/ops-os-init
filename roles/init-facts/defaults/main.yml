@@ -3,7 +3,7 @@
 ops_hostname: ""
 ops_timezone: "Asia/Shanghai"
 ops_locale: "en_US.UTF-8"
-ops_dns_managed: false
+ops_dns_managed: true
 ops_dns_servers:
   - "8.8.8.8"
   - "1.1.1.1"
