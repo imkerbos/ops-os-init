@@ -85,9 +85,22 @@
     owner: root
     group: root
     mode: "0644"
-  notify:
-    - Reload systemd
-    - Restart sshd for limits
+  register: _ops_ssh_override
+
+- name: 检查 SSH 服务当前 LimitNOFILE
+  ansible.builtin.command:
+    cmd: "systemctl show {{ _ops_ssh_service }} --property=LimitNOFILE"
+  register: _ops_ssh_current_limit
+  changed_when: false
+
+- name: 重载 systemd 并重启 SSH 服务
+  ansible.builtin.systemd:
+    name: "{{ _ops_ssh_service }}"
+    state: restarted
+    daemon_reload: true
+  when: >
+    _ops_ssh_override.changed or
+    _ops_nofile_hard | string not in _ops_ssh_current_limit.stdout
 
 # =============================================================================
 # PAM pam_limits.so 确认（Debian 系）
