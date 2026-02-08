@@ -1,0 +1,4 @@
+# Managed by ops-os-init — do not edit manually
+{% for item in ops_shell_aliases %}
+alias {{ item.alias }}='{{ item.command }}'
+{% endfor %}

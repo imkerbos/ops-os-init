@@ -1,0 +1,7 @@
+# Managed by ops-os-init — do not edit manually
+{% for server in ops_dns_servers %}
+nameserver {{ server }}
+{% endfor %}
+{% if ops_dns_search | length > 0 %}
+search {{ ops_dns_search | join(' ') }}
+{% endif %}

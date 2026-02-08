@@ -1,0 +1,30 @@
+---
+# =============================================================================
+# init-services — 服务管理
+# =============================================================================
+
+- name: 检查待禁用服务是否存在
+  ansible.builtin.command:
+    cmd: systemctl list-unit-files {{ item }}
+  loop: "{{ ops_services_disable }}"
+  register: service_check
+  changed_when: false
+  failed_when: false
+
+- name: 停止并禁用不必要的服务
+  ansible.builtin.systemd:
+    name: "{{ item.item }}"
+    state: stopped
+    enabled: false
+  loop: "{{ service_check.results }}"
+  loop_control:
+    label: "{{ item.item }}"
+  when: item.rc == 0 and item.item in item.stdout
+  failed_when: false
+
+- name: 启动并启用核心服务
+  ansible.builtin.systemd:
+    name: "{{ item }}"
+    state: started
+    enabled: true
+  loop: "{{ ops_services_enable }}"

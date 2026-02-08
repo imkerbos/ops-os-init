@@ -1,0 +1,65 @@
+---
+# =============================================================================
+# init-packages — 包管理
+# =============================================================================
+
+- name: 安装运维工具包
+  ansible.builtin.dnf:
+    name: "{{ ops_packages_install }}"
+    state: present
+
+- name: 移除高风险默认包
+  ansible.builtin.dnf:
+    name: "{{ ops_packages_remove }}"
+    state: absent
+
+# --- Docker 安装（仅 ops_docker_enabled: true 时执行）---
+
+- name: 移除系统自带的旧版容器包
+  ansible.builtin.dnf:
+    name:
+      - docker
+      - docker-client
+      - docker-client-latest
+      - docker-common
+      - docker-latest
+      - docker-latest-logrotate
+      - docker-logrotate
+      - docker-engine
+      - podman
+      - buildah
+    state: absent
+  when: ops_docker_enabled
+
+- name: 添加 Docker 官方 YUM 仓库
+  ansible.builtin.yum_repository:
+    name: docker-ce
+    description: Docker CE Stable
+    baseurl: https://download.docker.com/linux/centos/$releasever/$basearch/stable
+    gpgcheck: true
+    gpgkey: https://download.docker.com/linux/centos/gpg
+    enabled: true
+  when: ops_docker_enabled
+
+- name: 安装 Docker CE
+  ansible.builtin.dnf:
+    name: "{{ ops_docker_packages }}"
+    state: present
+  when: ops_docker_enabled
+
+- name: 启动并启用 Docker 服务
+  ansible.builtin.systemd:
+    name: docker
+    state: started
+    enabled: true
+  when: ops_docker_enabled
+
+- name: 将运维用户加入 docker 组
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    groups: docker
+    append: true
+  loop: "{{ ops_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+  when: ops_docker_enabled

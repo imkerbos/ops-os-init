@@ -1,0 +1,249 @@
+---
+# =============================================================================
+# ops-os-init 全局变量 — Rocky Linux 9
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# 基础系统配置 (init-facts)
+# -----------------------------------------------------------------------------
+
+# 主机名（留空则跳过设置）
+ops_hostname: ""
+
+# 时区
+ops_timezone: "Asia/Shanghai"
+
+# Locale
+ops_locale: "en_US.UTF-8"
+
+# DNS 服务器
+ops_dns_servers:
+  - "8.8.8.8"
+  - "1.1.1.1"
+  - "8.8.4.4"
+
+ops_dns_search: []
+
+# NTP 服务器
+ops_ntp_servers:
+  - "time.cloudflare.com"
+  - "time.google.com"
+  - "pool.ntp.org"
+
+# logrotate 基础配置
+ops_logrotate_frequency: "weekly"
+ops_logrotate_rotate: 4
+ops_logrotate_maxsize: "100M"
+
+# 全局 Shell Alias（写入 /etc/profile.d/ops-alias.sh）
+ops_shell_aliases:
+  - alias: "docker-compose"
+    command: "docker compose"
+  - alias: "ll"
+    command: "ls -lh --color=auto"
+  - alias: "la"
+    command: "ls -lAh --color=auto"
+
+# -----------------------------------------------------------------------------
+# 内核资源限制 (init-kernel)
+# -----------------------------------------------------------------------------
+
+ops_limits:
+  - domain: "*"
+    type: "soft"
+    item: "nofile"
+    value: 655360
+  - domain: "*"
+    type: "hard"
+    item: "nofile"
+    value: 655360
+  - domain: "*"
+    type: "soft"
+    item: "nproc"
+    value: 131072
+  - domain: "*"
+    type: "hard"
+    item: "nproc"
+    value: 131072
+  - domain: "*"
+    type: "soft"
+    item: "memlock"
+    value: "unlimited"
+  - domain: "*"
+    type: "hard"
+    item: "memlock"
+    value: "unlimited"
+  - domain: "*"
+    type: "soft"
+    item: "core"
+    value: 0
+  - domain: "*"
+    type: "hard"
+    item: "core"
+    value: 0
+
+# -----------------------------------------------------------------------------
+# Sysctl 参数 (init-sysctl)
+# -----------------------------------------------------------------------------
+
+ops_sysctl_params:
+  # --- TCP 优化 ---
+  net.ipv4.tcp_fin_timeout: 15
+  net.ipv4.tcp_tw_reuse: 1
+  net.ipv4.tcp_keepalive_time: 600
+  net.ipv4.tcp_keepalive_intvl: 30
+  net.ipv4.tcp_keepalive_probes: 3
+  net.ipv4.tcp_max_syn_backlog: 8192
+  net.ipv4.tcp_syncookies: 1
+  net.ipv4.tcp_syn_retries: 2
+  net.ipv4.tcp_synack_retries: 2
+  net.ipv4.tcp_slow_start_after_idle: 0
+  net.ipv4.tcp_mtu_probing: 1
+  net.ipv4.tcp_rmem: "4096 87380 16777216"
+  net.ipv4.tcp_wmem: "4096 65536 16777216"
+
+  # --- 网络核心 ---
+  net.core.somaxconn: 32768
+  net.core.netdev_max_backlog: 16384
+  net.core.rmem_max: 16777216
+  net.core.wmem_max: 16777216
+
+  # --- IPv4 安全 ---
+  net.ipv4.ip_forward: 0
+  net.ipv4.conf.all.rp_filter: 1
+  net.ipv4.conf.default.rp_filter: 1
+  net.ipv4.conf.all.accept_redirects: 0
+  net.ipv4.conf.default.accept_redirects: 0
+  net.ipv4.conf.all.send_redirects: 0
+  net.ipv4.conf.default.send_redirects: 0
+  net.ipv4.conf.all.accept_source_route: 0
+  net.ipv4.conf.default.accept_source_route: 0
+  net.ipv4.ip_local_port_range: "10000 65535"
+
+  # --- IPv6（默认禁用）---
+  net.ipv6.conf.all.disable_ipv6: 1
+  net.ipv6.conf.default.disable_ipv6: 1
+
+  # --- 文件系统 ---
+  fs.file-max: 2097152
+  fs.nr_open: 2097152
+  fs.inotify.max_user_watches: 524288
+  fs.inotify.max_user_instances: 8192
+
+  # --- 虚拟内存 ---
+  vm.swappiness: 10
+  vm.max_map_count: 262144
+  vm.dirty_ratio: 20
+  vm.dirty_background_ratio: 5
+
+  # --- 内核安全 ---
+  kernel.sysrq: 0
+  kernel.pid_max: 4194304
+
+# -----------------------------------------------------------------------------
+# 用户管理 (init-users)
+# -----------------------------------------------------------------------------
+
+ops_users:
+  - name: ops
+    shell: /bin/bash
+    groups:
+      - wheel
+    sudo_nopasswd: true
+    ssh_key_file: ops.pub
+    home_mode: "0750"
+
+ops_users_lock:
+  - lp
+  - sync
+  - shutdown
+  - halt
+  - operator
+  - games
+  - ftp
+
+# -----------------------------------------------------------------------------
+# SSH 加固 (init-ssh)
+# -----------------------------------------------------------------------------
+
+ops_ssh_port: 22
+ops_ssh_permit_root_login: "no"
+ops_ssh_password_authentication: "no"
+ops_ssh_max_auth_tries: 3
+ops_ssh_client_alive_interval: 300
+ops_ssh_client_alive_count_max: 3
+ops_ssh_x11_forwarding: "no"
+ops_ssh_allow_tcp_forwarding: "no"
+ops_ssh_max_sessions: 10
+
+# 应急 SSH
+ops_ssh_emergency_enabled: true
+ops_ssh_emergency_port: 22222
+ops_ssh_emergency_permit_root_login: "yes"
+ops_ssh_emergency_password_authentication: "yes"
+
+# -----------------------------------------------------------------------------
+# 服务管理 (init-services)
+# -----------------------------------------------------------------------------
+
+ops_services_disable:
+  - cups
+  - avahi-daemon
+  - ModemManager
+  - bluetooth
+  - kdump
+  - iscsi
+  - iscsid
+  - multipathd
+  - rpcbind
+  - nfs-client.target
+  - remote-fs.target
+  - sssd
+  - sssd-kcm
+
+ops_services_enable:
+  - chronyd
+  - rsyslog
+  - sshd
+  - crond
+  - NetworkManager
+
+# -----------------------------------------------------------------------------
+# 包管理 (init-packages)
+# -----------------------------------------------------------------------------
+
+ops_packages_install:
+  - vim-enhanced
+  - curl
+  - wget
+  - net-tools
+  - lsof
+  - htop
+  - iotop
+  - sysstat
+  - strace
+  - tcpdump
+  - bind-utils
+  - telnet
+  - unzip
+  - tar
+  - rsync
+  - tree
+  - jq
+  - bash-completion
+  - chrony
+  - logrotate
+  - psmisc
+  - procps-ng
+  - iproute
+  - iputils
+  - tmux
+  - yum-utils
+
+ops_packages_remove:
+  - cockpit
+  - cockpit-ws
+  - cockpit-system
+  - cockpit-bridge
+  - PackageKit
+  - PackageKit-command-not-found

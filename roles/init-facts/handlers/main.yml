@@ -1,0 +1,7 @@
+---
+# init-facts handlers
+
+- name: Restart chronyd
+  ansible.builtin.systemd:
+    name: chronyd
+    state: restarted

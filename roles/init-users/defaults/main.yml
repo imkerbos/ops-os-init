@@ -1,0 +1,19 @@
+---
+# init-users defaults
+ops_users:
+  - name: ops
+    shell: /bin/bash
+    groups:
+      - wheel
+    sudo_nopasswd: true
+    ssh_key_file: ops.pub
+    home_mode: "0750"
+
+ops_users_lock:
+  - lp
+  - sync
+  - shutdown
+  - halt
+  - operator
+  - games
+  - ftp

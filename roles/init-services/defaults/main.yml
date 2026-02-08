@@ -1,0 +1,23 @@
+---
+# init-services defaults
+ops_services_disable:
+  - cups
+  - avahi-daemon
+  - ModemManager
+  - bluetooth
+  - kdump
+  - iscsi
+  - iscsid
+  - multipathd
+  - rpcbind
+  - nfs-client.target
+  - remote-fs.target
+  - sssd
+  - sssd-kcm
+
+ops_services_enable:
+  - chronyd
+  - rsyslog
+  - sshd
+  - crond
+  - NetworkManager

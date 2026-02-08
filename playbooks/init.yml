@@ -1,0 +1,77 @@
+---
+# =============================================================================
+# ops-os-init — Rocky Linux 9 系统初始化主 Playbook
+# =============================================================================
+
+- name: Rocky Linux 9 系统初始化
+  hosts: rocky9
+  gather_facts: true
+  become: true
+
+  pre_tasks:
+    - name: 校验目标操作系统为 RedHat 系
+      ansible.builtin.assert:
+        that:
+          - ansible_os_family == "RedHat"
+        fail_msg: "此 Playbook 仅支持 RedHat 系操作系统，当前系统: {{ ansible_os_family }}"
+        success_msg: "操作系统校验通过: {{ ansible_distribution }} {{ ansible_distribution_version }}"
+
+    - name: 校验操作系统版本 >= 9
+      ansible.builtin.assert:
+        that:
+          - ansible_distribution_major_version | int >= 9
+        fail_msg: "此 Playbook 需要版本 >= 9，当前版本: {{ ansible_distribution_version }}"
+        success_msg: "版本校验通过: {{ ansible_distribution_major_version }}"
+
+  roles:
+    - role: init-facts
+      tags:
+        - init-facts
+        - facts
+
+    - role: init-kernel
+      tags:
+        - init-kernel
+        - kernel
+
+    - role: init-sysctl
+      tags:
+        - init-sysctl
+        - sysctl
+
+    - role: init-users
+      tags:
+        - init-users
+        - users
+
+    - role: init-ssh
+      tags:
+        - init-ssh
+        - ssh
+
+    - role: init-services
+      tags:
+        - init-services
+        - services
+
+    - role: init-packages
+      tags:
+        - init-packages
+        - packages
+
+  post_tasks:
+    - name: 输出初始化完成摘要
+      ansible.builtin.debug:
+        msg:
+          - "============================================="
+          - "  系统初始化完成 — {{ inventory_hostname }}"
+          - "============================================="
+          - "主机名:     {{ ansible_hostname }}"
+          - "操作系统:   {{ ansible_distribution }} {{ ansible_distribution_version }}"
+          - "内核版本:   {{ ansible_kernel }}"
+          - "IP 地址:    {{ ansible_default_ipv4.address | default('N/A') }}"
+          - "============================================="
+          - "⚠️  请验证 SSH 连接是否正常："
+          - "  ssh -p {{ ops_ssh_port }} ops@{{ ansible_default_ipv4.address | default(inventory_hostname) }}"
+          - "  应急端口: ssh -p {{ ops_ssh_emergency_port }} root@{{ ansible_default_ipv4.address | default(inventory_hostname) }}"
+          - "============================================="

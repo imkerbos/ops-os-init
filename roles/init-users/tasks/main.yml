@@ -1,0 +1,56 @@
+---
+# =============================================================================
+# init-users — 用户与权限管理
+# =============================================================================
+
+- name: 创建运维用户
+  ansible.builtin.user:
+    name: "{{ item.name }}"
+    shell: "{{ item.shell }}"
+    groups: "{{ item.groups }}"
+    append: true
+    create_home: true
+  loop: "{{ ops_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: 设置用户 home 目录权限
+  ansible.builtin.file:
+    path: "/home/{{ item.name }}"
+    mode: "{{ item.home_mode }}"
+  loop: "{{ ops_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: 部署 SSH 公钥
+  ansible.posix.authorized_key:
+    user: "{{ item.name }}"
+    state: present
+    key: "{{ lookup('file', item.ssh_key_file) }}"
+  loop: "{{ ops_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: 配置 sudoers 权限
+  ansible.builtin.copy:
+    content: |
+      # Managed by ops-os-init
+      {{ item.name }} ALL=(ALL) {{ 'NOPASSWD: ALL' if item.sudo_nopasswd else 'ALL' }}
+    dest: "/etc/sudoers.d/{{ item.name }}"
+    owner: root
+    group: root
+    mode: "0440"
+    validate: "visudo -cf %s"
+  loop: "{{ ops_users }}"
+  loop_control:
+    label: "{{ item.name }}"
+
+- name: 锁定无用系统账户
+  ansible.builtin.command:
+    cmd: "usermod --lock {{ item }}"
+  loop: "{{ ops_users_lock }}"
+  register: lock_result
+  changed_when: lock_result.rc == 0
+  failed_when:
+    - lock_result.rc != 0
+    - "'does not exist' not in lock_result.stderr"

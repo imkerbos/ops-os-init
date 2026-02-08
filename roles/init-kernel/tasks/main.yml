@@ -1,0 +1,12 @@
+---
+# =============================================================================
+# init-kernel — 内核参数与资源限制
+# =============================================================================
+
+- name: 配置系统资源限制
+  ansible.builtin.template:
+    src: limits.d-99-ops-init.conf.j2
+    dest: /etc/security/limits.d/99-ops-init.conf
+    owner: root
+    group: root
+    mode: "0644"

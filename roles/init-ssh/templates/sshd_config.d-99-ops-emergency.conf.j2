@@ -1,0 +1,15 @@
+# Managed by ops-os-init — 应急 SSH 配置
+# /etc/ssh/sshd-emergency.conf
+# 此配置用于应急回滚，保留 root 登录和密码认证能力
+
+Port {{ ops_ssh_emergency_port }}
+PermitRootLogin {{ ops_ssh_emergency_permit_root_login }}
+PasswordAuthentication {{ ops_ssh_emergency_password_authentication }}
+PubkeyAuthentication yes
+AuthorizedKeysFile .ssh/authorized_keys
+HostKey /etc/ssh/ssh_host_rsa_key
+HostKey /etc/ssh/ssh_host_ecdsa_key
+HostKey /etc/ssh/ssh_host_ed25519_key
+UseDNS no
+GSSAPIAuthentication no
+Subsystem sftp /usr/libexec/openssh/sftp-server

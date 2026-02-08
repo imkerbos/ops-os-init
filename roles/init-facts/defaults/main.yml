@@ -1,0 +1,26 @@
+---
+# init-facts defaults
+ops_hostname: ""
+ops_timezone: "Asia/Shanghai"
+ops_locale: "en_US.UTF-8"
+ops_dns_servers:
+  - "8.8.8.8"
+  - "1.1.1.1"
+  - "8.8.4.4"
+ops_dns_search: []
+ops_ntp_servers:
+  - "time.cloudflare.com"
+  - "time.google.com"
+  - "pool.ntp.org"
+ops_logrotate_frequency: "weekly"
+ops_logrotate_rotate: 4
+ops_logrotate_maxsize: "100M"
+
+# 全局 Shell Alias（写入 /etc/profile.d/ops-alias.sh）
+ops_shell_aliases:
+  - alias: "docker-compose"
+    command: "docker compose"
+  - alias: "ll"
+    command: "ls -lh --color=auto"
+  - alias: "la"
+    command: "ls -lAh --color=auto"

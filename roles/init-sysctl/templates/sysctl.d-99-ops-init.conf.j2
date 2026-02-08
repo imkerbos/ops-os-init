@@ -1,0 +1,6 @@
+# Managed by ops-os-init — do not edit manually
+# /etc/sysctl.d/99-ops-init.conf
+
+{% for key, value in ops_sysctl_params.items() %}
+{{ key }} = {{ value }}
+{% endfor %}

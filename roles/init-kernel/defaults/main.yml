@@ -1,0 +1,35 @@
+---
+# init-kernel defaults
+ops_limits:
+  - domain: "*"
+    type: "soft"
+    item: "nofile"
+    value: 655360
+  - domain: "*"
+    type: "hard"
+    item: "nofile"
+    value: 655360
+  - domain: "*"
+    type: "soft"
+    item: "nproc"
+    value: 131072
+  - domain: "*"
+    type: "hard"
+    item: "nproc"
+    value: 131072
+  - domain: "*"
+    type: "soft"
+    item: "memlock"
+    value: "unlimited"
+  - domain: "*"
+    type: "hard"
+    item: "memlock"
+    value: "unlimited"
+  - domain: "*"
+    type: "soft"
+    item: "core"
+    value: 0
+  - domain: "*"
+    type: "hard"
+    item: "core"
+    value: 0

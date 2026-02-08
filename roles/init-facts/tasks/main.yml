@@ -1,0 +1,100 @@
+---
+# =============================================================================
+# init-facts — 基础系统配置
+# =============================================================================
+
+- name: 设置主机名
+  ansible.builtin.hostname:
+    name: "{{ ops_hostname }}"
+  when: ops_hostname | length > 0
+
+- name: 设置时区
+  ansible.builtin.timezone:
+    name: "{{ ops_timezone }}"
+
+- name: 设置 locale 配置文件
+  ansible.builtin.copy:
+    content: |
+      LANG={{ ops_locale }}
+      LC_ALL={{ ops_locale }}
+    dest: /etc/locale.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: 应用 locale 设置
+  ansible.builtin.command:
+    cmd: localectl set-locale LANG={{ ops_locale }}
+  changed_when: false
+
+- name: 配置 DNS 解析
+  ansible.builtin.template:
+    src: resolv.conf.j2
+    dest: /etc/resolv.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: 安装 chrony
+  ansible.builtin.dnf:
+    name: chrony
+    state: present
+
+- name: 配置 chrony NTP 服务
+  ansible.builtin.template:
+    src: chrony.conf.j2
+    dest: /etc/chrony.conf
+    owner: root
+    group: root
+    mode: "0644"
+  notify: Restart chronyd
+
+- name: 启动并启用 chronyd 服务
+  ansible.builtin.systemd:
+    name: chronyd
+    state: started
+    enabled: true
+
+- name: 安装 rsyslog
+  ansible.builtin.dnf:
+    name: rsyslog
+    state: present
+
+- name: 启动并启用 rsyslog 服务
+  ansible.builtin.systemd:
+    name: rsyslog
+    state: started
+    enabled: true
+
+- name: 安装 logrotate
+  ansible.builtin.dnf:
+    name: logrotate
+    state: present
+
+- name: 配置 logrotate 基础参数
+  ansible.builtin.copy:
+    content: |
+      # Managed by ops-os-init — do not edit manually
+      {{ ops_logrotate_frequency }}
+      rotate {{ ops_logrotate_rotate }}
+      maxsize {{ ops_logrotate_maxsize }}
+      create
+      dateext
+      compress
+      delaycompress
+      notifempty
+      missingok
+      include /etc/logrotate.d
+    dest: /etc/logrotate.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: 配置全局 Shell Alias
+  ansible.builtin.template:
+    src: ops-alias.sh.j2
+    dest: /etc/profile.d/ops-alias.sh
+    owner: root
+    group: root
+    mode: "0644"
+  when: ops_shell_aliases | length > 0

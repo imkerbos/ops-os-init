@@ -1,0 +1,64 @@
+---
+# =============================================================================
+# init-ssh — SSH 安全加固
+# =============================================================================
+
+- name: 确保 sshd_config.d 目录存在
+  ansible.builtin.file:
+    path: /etc/ssh/sshd_config.d
+    state: directory
+    owner: root
+    group: root
+    mode: "0700"
+
+- name: 部署 SSH 主配置加固
+  ansible.builtin.template:
+    src: sshd_config.d-99-ops-init.conf.j2
+    dest: /etc/ssh/sshd_config.d/99-ops-init.conf
+    owner: root
+    group: root
+    mode: "0600"
+    validate: "sshd -t -f /dev/null -o 'Include %s'"
+  notify: Restart sshd
+
+- name: 部署应急 SSH 配置文件
+  ansible.builtin.template:
+    src: sshd_config.d-99-ops-emergency.conf.j2
+    dest: /etc/ssh/sshd-emergency.conf
+    owner: root
+    group: root
+    mode: "0600"
+  when: ops_ssh_emergency_enabled
+  notify: Restart sshd-emergency
+
+- name: 创建应急 sshd systemd 服务
+  ansible.builtin.copy:
+    content: |
+      # Managed by ops-os-init — 应急 SSH 服务
+      [Unit]
+      Description=OpenSSH Emergency Server
+      After=network.target
+
+      [Service]
+      Type=notify
+      ExecStart=/usr/sbin/sshd -D -f /etc/ssh/sshd-emergency.conf
+      ExecReload=/bin/kill -HUP $MAINPID
+      Restart=on-failure
+      RestartSec=42s
+
+      [Install]
+      WantedBy=multi-user.target
+    dest: /etc/systemd/system/sshd-emergency.service
+    owner: root
+    group: root
+    mode: "0644"
+  when: ops_ssh_emergency_enabled
+  notify: Restart sshd-emergency
+
+- name: 启动并启用应急 sshd 服务
+  ansible.builtin.systemd:
+    name: sshd-emergency
+    state: started
+    enabled: true
+    daemon_reload: true
+  when: ops_ssh_emergency_enabled

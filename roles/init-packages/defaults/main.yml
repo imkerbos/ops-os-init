@@ -1,0 +1,46 @@
+---
+# init-packages defaults
+ops_packages_install:
+  - vim-enhanced
+  - curl
+  - wget
+  - net-tools
+  - lsof
+  - htop
+  - iotop
+  - sysstat
+  - strace
+  - tcpdump
+  - bind-utils
+  - telnet
+  - unzip
+  - tar
+  - rsync
+  - tree
+  - jq
+  - bash-completion
+  - chrony
+  - logrotate
+  - psmisc
+  - procps-ng
+  - iproute
+  - iputils
+  - tmux
+  - yum-utils
+
+ops_packages_remove:
+  - cockpit
+  - cockpit-ws
+  - cockpit-system
+  - cockpit-bridge
+  - PackageKit
+  - PackageKit-command-not-found
+
+# Docker 安装（默认关闭，docker 分组覆盖开启）
+ops_docker_enabled: false
+ops_docker_packages:
+  - docker-ce
+  - docker-ce-cli
+  - containerd.io
+  - docker-buildx-plugin
+  - docker-compose-plugin

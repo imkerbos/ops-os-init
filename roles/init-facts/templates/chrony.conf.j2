@@ -1,0 +1,13 @@
+# Managed by ops-os-init — do not edit manually
+# /etc/chrony.conf
+
+{% for server in ops_ntp_servers %}
+server {{ server }} iburst
+{% endfor %}
+
+driftfile /var/lib/chrony/drift
+makestep 1.0 3
+rtcsync
+keyfile /etc/chrony.keys
+leapsectz right/UTC
+logdir /var/log/chrony
