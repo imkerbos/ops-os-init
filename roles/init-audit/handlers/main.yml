@@ -1,0 +1,8 @@
+---
+# init-audit handlers
+# 注意: auditd 不支持 systemctl restart，必须使用 service 命令
+
+- name: Restart auditd
+  ansible.builtin.command:
+    cmd: service auditd restart
+  changed_when: true

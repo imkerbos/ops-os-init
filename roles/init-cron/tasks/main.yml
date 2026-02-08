@@ -1,0 +1,56 @@
+---
+# =============================================================================
+# init-cron — 定时任务安全
+# =============================================================================
+
+- name: 创建 /etc/cron.allow
+  ansible.builtin.copy:
+    content: |
+      {% for user in ops_cron_allow_users %}
+      {{ user }}
+      {% endfor %}
+    dest: /etc/cron.allow
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: 删除 /etc/cron.deny
+  ansible.builtin.file:
+    path: /etc/cron.deny
+    state: absent
+
+- name: 创建 /etc/at.allow
+  ansible.builtin.copy:
+    content: |
+      {% for user in ops_cron_at_allow_users %}
+      {{ user }}
+      {% endfor %}
+    dest: /etc/at.allow
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: 删除 /etc/at.deny
+  ansible.builtin.file:
+    path: /etc/at.deny
+    state: absent
+
+- name: 加固 crontab 文件权限
+  ansible.builtin.file:
+    path: /etc/crontab
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: 加固 cron 目录权限
+  ansible.builtin.file:
+    path: "{{ item }}"
+    owner: root
+    group: root
+    mode: "0700"
+  loop:
+    - /etc/cron.hourly
+    - /etc/cron.daily
+    - /etc/cron.weekly
+    - /etc/cron.monthly
+    - /etc/cron.d

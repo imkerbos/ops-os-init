@@ -14,3 +14,24 @@ ops_ssh_emergency_enabled: true
 ops_ssh_emergency_port: 22222
 ops_ssh_emergency_permit_root_login: "yes"
 ops_ssh_emergency_password_authentication: "yes"
+
+# 加密算法
+ops_ssh_ciphers: "aes256-gcm@openssh.com,chacha20-poly1305@openssh.com,aes256-ctr,aes128-gcm@openssh.com"
+ops_ssh_macs: "hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,hmac-sha2-512,hmac-sha2-256"
+ops_ssh_kex_algorithms: "curve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp521,ecdh-sha2-nistp384,ecdh-sha2-nistp256,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512"
+ops_ssh_host_key_algorithms: "ssh-ed25519,ecdsa-sha2-nistp521,ecdsa-sha2-nistp384,ecdsa-sha2-nistp256,rsa-sha2-512,rsa-sha2-256"
+
+# 额外安全参数
+ops_ssh_login_grace_time: 30
+ops_ssh_max_startups: "10:30:60"
+ops_ssh_log_level: "VERBOSE"
+ops_ssh_permit_user_environment: "no"
+
+# 登录横幅
+ops_ssh_banner_enabled: true
+ops_ssh_banner_text: |
+  ========================================================
+  WARNING: Authorized access only.
+  All activity is monitored and recorded.
+  Unauthorized access is strictly prohibited.
+  ========================================================

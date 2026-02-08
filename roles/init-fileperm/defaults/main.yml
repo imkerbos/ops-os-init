@@ -1,0 +1,18 @@
+---
+# init-fileperm defaults
+ops_file_permissions:
+  # 账号文件
+  - { path: /etc/passwd, owner: root, group: root, mode: "0644" }
+  - { path: /etc/shadow, owner: root, group: root, mode: "0000" }
+  - { path: /etc/gshadow, owner: root, group: root, mode: "0000" }
+  - { path: /etc/group, owner: root, group: root, mode: "0644" }
+  - { path: /etc/passwd-, owner: root, group: root, mode: "0600" }
+  - { path: /etc/shadow-, owner: root, group: root, mode: "0600" }
+  - { path: /etc/gshadow-, owner: root, group: root, mode: "0600" }
+  - { path: /etc/group-, owner: root, group: root, mode: "0600" }
+  # SSH
+  - { path: /etc/ssh/sshd_config, owner: root, group: root, mode: "0600" }
+  # Cron
+  - { path: /etc/crontab, owner: root, group: root, mode: "0600" }
+  # GRUB
+  - { path: /boot/grub2/grub.cfg, owner: root, group: root, mode: "0600" }

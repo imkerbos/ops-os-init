@@ -1,0 +1,6 @@
+# Managed by ops-os-init — 账户锁定策略
+# /etc/security/faillock.conf
+
+deny = {{ ops_faillock_deny }}
+unlock_time = {{ ops_faillock_unlock_time }}
+fail_interval = {{ ops_faillock_fail_interval }}

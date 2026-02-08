@@ -59,6 +59,21 @@
         - init-packages
         - packages
 
+    - role: init-audit
+      tags:
+        - init-audit
+        - audit
+
+    - role: init-cron
+      tags:
+        - init-cron
+        - cron
+
+    - role: init-fileperm
+      tags:
+        - init-fileperm
+        - fileperm
+
   post_tasks:
     - name: 输出初始化完成摘要
       ansible.builtin.debug:

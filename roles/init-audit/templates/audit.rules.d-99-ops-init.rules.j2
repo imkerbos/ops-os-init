@@ -1,0 +1,13 @@
+# Managed by ops-os-init — 审计规则
+# /etc/audit/rules.d/99-ops-init.rules
+
+# 清除旧规则
+-D
+
+# 设置缓冲区
+-b 8192
+
+# 审计规则
+{% for rule in ops_audit_rules %}
+{{ rule }}
+{% endfor %}

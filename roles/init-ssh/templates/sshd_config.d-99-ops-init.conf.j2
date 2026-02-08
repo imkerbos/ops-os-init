@@ -10,6 +10,17 @@ ClientAliveCountMax {{ ops_ssh_client_alive_count_max }}
 X11Forwarding {{ ops_ssh_x11_forwarding }}
 AllowTcpForwarding {{ ops_ssh_allow_tcp_forwarding }}
 MaxSessions {{ ops_ssh_max_sessions }}
+LoginGraceTime {{ ops_ssh_login_grace_time }}
+MaxStartups {{ ops_ssh_max_startups }}
+LogLevel {{ ops_ssh_log_level }}
+PermitUserEnvironment {{ ops_ssh_permit_user_environment }}
+Ciphers {{ ops_ssh_ciphers }}
+MACs {{ ops_ssh_macs }}
+KexAlgorithms {{ ops_ssh_kex_algorithms }}
+HostKeyAlgorithms {{ ops_ssh_host_key_algorithms }}
+{% if ops_ssh_banner_enabled %}
+Banner /etc/issue.net
+{% endif %}
 PubkeyAuthentication yes
 UseDNS no
 GSSAPIAuthentication no

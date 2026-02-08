@@ -27,6 +27,8 @@ ops_packages_install:
   - iputils
   - tmux
   - yum-utils
+  - audit
+  - libpwquality
 
 ops_packages_remove:
   - cockpit

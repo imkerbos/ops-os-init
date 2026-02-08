@@ -1,0 +1,23 @@
+---
+# =============================================================================
+# init-fileperm — 关键文件权限加固
+# =============================================================================
+
+- name: 检查文件是否存在
+  ansible.builtin.stat:
+    path: "{{ item.path }}"
+  loop: "{{ ops_file_permissions }}"
+  loop_control:
+    label: "{{ item.path }}"
+  register: file_stat_results
+
+- name: 设置关键文件权限
+  ansible.builtin.file:
+    path: "{{ item.item.path }}"
+    owner: "{{ item.item.owner }}"
+    group: "{{ item.item.group }}"
+    mode: "{{ item.item.mode }}"
+  loop: "{{ file_stat_results.results }}"
+  loop_control:
+    label: "{{ item.item.path }}"
+  when: item.stat.exists

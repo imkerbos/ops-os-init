@@ -1,0 +1,9 @@
+---
+# init-cron defaults
+ops_cron_allow_users:
+  - root
+  - ops
+
+ops_cron_at_allow_users:
+  - root
+  - ops

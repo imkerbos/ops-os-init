@@ -1,0 +1,67 @@
+---
+# =============================================================================
+# init-audit — 日志审计配置
+# =============================================================================
+
+- name: 安装 audit 包
+  ansible.builtin.dnf:
+    name: audit
+    state: present
+  when: ops_audit_enabled
+
+- name: 配置 auditd.conf — max_log_file
+  ansible.builtin.lineinfile:
+    path: /etc/audit/auditd.conf
+    regexp: '^max_log_file\s*='
+    line: "max_log_file = {{ ops_audit_max_log_file }}"
+  when: ops_audit_enabled
+  notify: Restart auditd
+
+- name: 配置 auditd.conf — num_logs
+  ansible.builtin.lineinfile:
+    path: /etc/audit/auditd.conf
+    regexp: '^num_logs\s*='
+    line: "num_logs = {{ ops_audit_num_logs }}"
+  when: ops_audit_enabled
+  notify: Restart auditd
+
+- name: 配置 auditd.conf — max_log_file_action
+  ansible.builtin.lineinfile:
+    path: /etc/audit/auditd.conf
+    regexp: '^max_log_file_action\s*='
+    line: "max_log_file_action = {{ ops_audit_max_log_file_action }}"
+  when: ops_audit_enabled
+  notify: Restart auditd
+
+- name: 配置 auditd.conf — space_left_action
+  ansible.builtin.lineinfile:
+    path: /etc/audit/auditd.conf
+    regexp: '^space_left_action\s*='
+    line: "space_left_action = {{ ops_audit_space_left_action }}"
+  when: ops_audit_enabled
+  notify: Restart auditd
+
+- name: 配置 auditd.conf — admin_space_left_action
+  ansible.builtin.lineinfile:
+    path: /etc/audit/auditd.conf
+    regexp: '^admin_space_left_action\s*='
+    line: "admin_space_left_action = {{ ops_audit_admin_space_left_action }}"
+  when: ops_audit_enabled
+  notify: Restart auditd
+
+- name: 部署审计规则
+  ansible.builtin.template:
+    src: audit.rules.d-99-ops-init.rules.j2
+    dest: /etc/audit/rules.d/99-ops-init.rules
+    owner: root
+    group: root
+    mode: "0600"
+  when: ops_audit_enabled
+  notify: Restart auditd
+
+- name: 启动并启用 auditd
+  ansible.builtin.service:
+    name: auditd
+    state: started
+    enabled: true
+  when: ops_audit_enabled

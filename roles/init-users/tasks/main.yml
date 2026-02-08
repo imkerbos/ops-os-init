@@ -54,3 +54,63 @@
   failed_when:
     - lock_result.rc != 0
     - "'does not exist' not in lock_result.stderr"
+
+# =============================================================================
+# 密码策略与账号安全加固
+# =============================================================================
+
+- name: 配置密码老化策略 — PASS_MAX_DAYS
+  ansible.builtin.lineinfile:
+    path: /etc/login.defs
+    regexp: '^PASS_MAX_DAYS'
+    line: "PASS_MAX_DAYS\t{{ ops_password_max_days }}"
+
+- name: 配置密码老化策略 — PASS_MIN_DAYS
+  ansible.builtin.lineinfile:
+    path: /etc/login.defs
+    regexp: '^PASS_MIN_DAYS'
+    line: "PASS_MIN_DAYS\t{{ ops_password_min_days }}"
+
+- name: 配置密码老化策略 — PASS_WARN_AGE
+  ansible.builtin.lineinfile:
+    path: /etc/login.defs
+    regexp: '^PASS_WARN_AGE'
+    line: "PASS_WARN_AGE\t{{ ops_password_warn_age }}"
+
+- name: 部署密码复杂度策略
+  ansible.builtin.template:
+    src: pwquality.conf.j2
+    dest: /etc/security/pwquality.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: 部署账户锁定策略
+  ansible.builtin.template:
+    src: faillock.conf.j2
+    dest: /etc/security/faillock.conf
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: 启用 authselect with-faillock
+  ansible.builtin.command:
+    cmd: authselect select sssd with-faillock with-pamaccess --force
+  register: authselect_result
+  changed_when: "'Profile changed' in authselect_result.stdout or 'already selected' not in authselect_result.stdout"
+  failed_when: authselect_result.rc != 0
+
+- name: 限制 su 仅 wheel 组用户
+  ansible.builtin.lineinfile:
+    path: /etc/pam.d/su
+    regexp: '^#?\s*auth\s+required\s+pam_wheel\.so\s+use_uid'
+    line: "auth\t\trequired\tpam_wheel.so use_uid"
+  when: ops_su_restrict_wheel
+
+- name: 部署全局安全环境变量（umask + TMOUT）
+  ansible.builtin.template:
+    src: profile.d-99-ops-security.sh.j2
+    dest: /etc/profile.d/99-ops-security.sh
+    owner: root
+    group: root
+    mode: "0644"

@@ -17,3 +17,33 @@ ops_users_lock:
   - operator
   - games
   - ftp
+
+# 密码老化 (/etc/login.defs)
+ops_password_max_days: 90
+ops_password_min_days: 7
+ops_password_warn_age: 14
+
+# 密码复杂度 (pam_pwquality)
+ops_pwquality_minlen: 12
+ops_pwquality_dcredit: -1
+ops_pwquality_ucredit: -1
+ops_pwquality_lcredit: -1
+ops_pwquality_ocredit: -1
+ops_pwquality_minclass: 3
+ops_pwquality_maxrepeat: 3
+ops_pwquality_retry: 3
+
+# 密码历史
+ops_pwhistory_remember: 5
+
+# 账户锁定 (pam_faillock)
+ops_faillock_deny: 5
+ops_faillock_unlock_time: 900
+ops_faillock_fail_interval: 900
+
+# su 限制
+ops_su_restrict_wheel: true
+
+# 全局 umask + 会话超时
+ops_umask: "027"
+ops_tmout: 600

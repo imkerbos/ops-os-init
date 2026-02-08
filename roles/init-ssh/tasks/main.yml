@@ -62,3 +62,30 @@
     enabled: true
     daemon_reload: true
   when: ops_ssh_emergency_enabled
+
+- name: 部署登录横幅 /etc/issue.net
+  ansible.builtin.template:
+    src: issue.net.j2
+    dest: /etc/issue.net
+    owner: root
+    group: root
+    mode: "0644"
+  when: ops_ssh_banner_enabled
+
+- name: 部署登录横幅 /etc/issue
+  ansible.builtin.template:
+    src: issue.net.j2
+    dest: /etc/issue
+    owner: root
+    group: root
+    mode: "0644"
+  when: ops_ssh_banner_enabled
+
+- name: 清空 /etc/motd 避免信息泄露
+  ansible.builtin.copy:
+    content: ""
+    dest: /etc/motd
+    owner: root
+    group: root
+    mode: "0644"
+  when: ops_ssh_banner_enabled

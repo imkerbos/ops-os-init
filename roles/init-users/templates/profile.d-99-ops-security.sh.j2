@@ -1,0 +1,7 @@
+# Managed by ops-os-init — 全局安全环境变量
+# /etc/profile.d/99-ops-security.sh
+
+umask {{ ops_umask }}
+TMOUT={{ ops_tmout }}
+readonly TMOUT
+export TMOUT
