@@ -118,6 +118,9 @@
     msg:
       - "ops_node_exporter_enabled = {{ ops_node_exporter_enabled }}"
       - "type = {{ ops_node_exporter_enabled | type_debug }}"
+      - "ops_repo_managed = {{ ops_repo_managed }}"
+      - "ops_docker_enabled = {{ ops_docker_enabled }}"
+      - "group_names = {{ group_names }}"
 
 - name: 检查 node_exporter 是否已安装
   ansible.builtin.stat:
