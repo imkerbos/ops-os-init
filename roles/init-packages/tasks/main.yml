@@ -3,6 +3,11 @@
 # init-packages — 包管理
 # =============================================================================
 
+- name: 安装 EPEL 仓库
+  ansible.builtin.dnf:
+    name: epel-release
+    state: present
+
 - name: 安装运维工具包
   ansible.builtin.dnf:
     name: "{{ ops_packages_install }}"
