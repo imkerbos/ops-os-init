@@ -113,6 +113,12 @@
 
 # --- Node Exporter 安装（仅 ops_node_exporter_enabled: true 时执行）---
 
+- name: DEBUG — 打印 node_exporter 变量
+  ansible.builtin.debug:
+    msg:
+      - "ops_node_exporter_enabled = {{ ops_node_exporter_enabled }}"
+      - "type = {{ ops_node_exporter_enabled | type_debug }}"
+
 - name: 检查 node_exporter 是否已安装
   ansible.builtin.stat:
     path: /usr/local/bin/node_exporter

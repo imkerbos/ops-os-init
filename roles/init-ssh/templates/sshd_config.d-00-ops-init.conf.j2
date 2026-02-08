@@ -22,6 +22,10 @@ HostKeyAlgorithms {{ ops_ssh_host_key_algorithms }}
 Banner /etc/issue.net
 {% endif %}
 PubkeyAuthentication yes
+UsePAM yes
+ChallengeResponseAuthentication no
 UseDNS no
 GSSAPIAuthentication no
 PermitEmptyPasswords no
+SyslogFacility AUTHPRIV
+PrintMotd no

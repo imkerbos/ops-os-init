@@ -11,6 +11,21 @@
     group: root
     mode: "0644"
 
+- name: 扫描 sysctl.d 目录下所有文件
+  ansible.builtin.find:
+    paths: /etc/sysctl.d
+    file_type: file
+  register: _sysctl_d_files
+
+- name: 移除非 ops-os-init 管理的 sysctl.d 文件
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ _sysctl_d_files.files }}"
+  loop_control:
+    label: "{{ item.path }}"
+  when: item.path | basename != '99-ops-init.conf'
+
 - name: 加载 sysctl 参数
   ansible.builtin.command:
     cmd: sysctl --system
