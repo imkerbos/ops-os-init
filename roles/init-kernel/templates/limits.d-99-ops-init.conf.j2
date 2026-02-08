@@ -4,3 +4,8 @@
 {% for limit in ops_limits %}
 {{ limit.domain }}    {{ limit.type }}    {{ limit.item }}    {{ limit.value }}
 {% endfor %}
+
+# pam_limits.so 的 * 通配符不匹配 root，需单独配置
+{% for limit in ops_limits if limit.domain == '*' %}
+root    {{ limit.type }}    {{ limit.item }}    {{ limit.value }}
+{% endfor %}
