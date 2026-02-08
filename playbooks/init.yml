@@ -87,6 +87,6 @@
           - "IP 地址:    {{ ansible_default_ipv4.address | default('N/A') }}"
           - "============================================="
           - "⚠️  请验证 SSH 连接是否正常："
-          - "  ssh -p {{ ops_ssh_port }} ops@{{ ansible_default_ipv4.address | default(inventory_hostname) }}"
+          - "  ssh -p {{ ops_ssh_port }} op@{{ ansible_default_ipv4.address | default(inventory_hostname) }}"
           - "  应急端口: ssh -p {{ ops_ssh_emergency_port }} root@{{ ansible_default_ipv4.address | default(inventory_hostname) }}"
           - "============================================="

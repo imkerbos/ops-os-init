@@ -118,12 +118,12 @@ ops_limits:
 
 # --- 用户管理（追加 cdnops 用户）---
 ops_users:
-  - name: ops
+  - name: op
     shell: /bin/bash
     groups:
       - wheel
     sudo_nopasswd: true
-    ssh_key_file: ops.pub
+    ssh_key_file: op.pub
     home_mode: "0750"
   - name: cdnops
     shell: /bin/bash
@@ -136,5 +136,5 @@ ops_users:
 # --- 定时任务（追加 cdnops）---
 ops_cron_allow_users:
   - root
-  - ops
+  - op
   - cdnops

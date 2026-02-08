@@ -1,12 +1,12 @@
 ---
 # init-users defaults
 ops_users:
-  - name: ops
+  - name: op
     shell: /bin/bash
     groups:
       - wheel
     sudo_nopasswd: true
-    ssh_key_file: ops.pub
+    ssh_key_file: op.pub
     home_mode: "0750"
 
 ops_users_lock:

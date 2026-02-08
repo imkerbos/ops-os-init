@@ -163,12 +163,12 @@ ops_sysctl_params:
 # -----------------------------------------------------------------------------
 
 ops_users:
-  - name: ops
+  - name: op
     shell: /bin/bash
     groups:
       - wheel
     sudo_nopasswd: true
-    ssh_key_file: ops.pub
+    ssh_key_file: op.pub
     home_mode: "0750"
 
 ops_users_lock:
@@ -392,11 +392,11 @@ ops_audit_rules:
 
 ops_cron_allow_users:
   - root
-  - ops
+  - op
 
 ops_cron_at_allow_users:
   - root
-  - ops
+  - op
 
 # -----------------------------------------------------------------------------
 # 关键文件权限 (init-fileperm)
