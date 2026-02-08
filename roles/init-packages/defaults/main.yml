@@ -44,8 +44,8 @@ ops_packages_remove:
   - PackageKit
   - PackageKit-command-not-found
 
-# Docker 安装
-ops_docker_enabled: true
+# Docker 安装（默认关闭，docker 分组在 group_vars/docker.yml 覆盖开启）
+ops_docker_enabled: false
 ops_docker_packages:
   - docker-ce
   - docker-ce-cli
