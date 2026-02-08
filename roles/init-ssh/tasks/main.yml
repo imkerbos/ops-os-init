@@ -13,11 +13,20 @@
 
 - name: 部署 SSH 主配置加固
   ansible.builtin.template:
-    src: sshd_config.d-99-ops-init.conf.j2
-    dest: /etc/ssh/sshd_config.d/99-ops-init.conf
+    src: sshd_config.d-00-ops-init.conf.j2
+    dest: /etc/ssh/sshd_config.d/00-ops-init.conf
     owner: root
     group: root
     mode: "0600"
+  notify: Restart sshd
+
+- name: 移除冲突的 sshd_config.d 文件
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/ssh/sshd_config.d/01-permitrootlogin.conf
+    - /etc/ssh/sshd_config.d/99-ops-init.conf
   notify: Restart sshd
 
 - name: 校验 sshd 完整配置
