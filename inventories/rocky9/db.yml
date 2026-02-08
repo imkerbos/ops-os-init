@@ -1,0 +1,28 @@
+---
+# =============================================================================
+# 数据库节点（MySQL / PostgreSQL / Redis 等）
+# =============================================================================
+# 使用前取消注释并修改为实际主机地址
+#
+# 变量优先级：主机变量 > 子组变量(db) > 父组变量(rocky9) > role defaults
+# =============================================================================
+
+all:
+  children:
+    rocky9:
+      children:
+        db:
+          hosts:
+            # db1:
+            #   ansible_host: 203.0.113.20
+            #   ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+            #   ops_hostname: db1.example.com
+            # db2:
+            #   ansible_host: 203.0.113.21
+            #   ops_hostname: db2.example.com
+
+      vars:
+        ansible_user: root
+        # ansible_port: 22
+        # ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+        # ansible_become_password: "{{ vault_become_password }}"

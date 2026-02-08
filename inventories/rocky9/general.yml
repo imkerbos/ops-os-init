@@ -1,0 +1,50 @@
+---
+# =============================================================================
+# 通用节点（不属于其他分组的服务器）
+# =============================================================================
+# 使用前取消注释并修改为实际主机地址
+#
+# 变量优先级：主机变量 > 子组变量(general) > 父组变量(rocky9) > role defaults
+# =============================================================================
+
+all:
+  children:
+    rocky9:
+      children:
+        general:
+          hosts:
+            # ----- root + 密码登录 -----
+            # node1:
+            #   ansible_host: 203.0.113.10
+            #   ansible_user: root
+            #   ansible_password: "your_root_password"
+            #   ops_hostname: node1.example.com
+
+            # ----- root + SSH Key（推荐）-----
+            # node2:
+            #   ansible_host: 203.0.113.11
+            #   ansible_user: root
+            #   ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+            #   ops_hostname: node2.example.com
+
+            # ----- 普通用户 + sudo -----
+            # node3:
+            #   ansible_host: 203.0.113.12
+            #   ansible_user: ops
+            #   ansible_become_password: "your_sudo_password"
+            #   ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+            #   ops_hostname: node3.example.com
+
+            # ----- 非标准 SSH 端口 -----
+            # node4:
+            #   ansible_host: 203.0.113.13
+            #   ansible_user: root
+            #   ansible_port: 2222
+            #   ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+            #   ops_hostname: node4.example.com
+
+      vars:
+        ansible_user: root
+        # ansible_port: 22
+        # ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+        # ansible_become_password: "{{ vault_become_password }}"

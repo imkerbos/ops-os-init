@@ -1,0 +1,28 @@
+---
+# =============================================================================
+# CDN / 反向代理节点（Nginx / HAProxy 等）
+# =============================================================================
+# 使用前取消注释并修改为实际主机地址
+#
+# 变量优先级：主机变量 > 子组变量(cdn) > 父组变量(rocky9) > role defaults
+# =============================================================================
+
+all:
+  children:
+    rocky9:
+      children:
+        cdn:
+          hosts:
+            # cdn1:
+            #   ansible_host: 203.0.113.30
+            #   ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+            #   ops_hostname: cdn1.example.com
+            # cdn2:
+            #   ansible_host: 203.0.113.31
+            #   ops_hostname: cdn2.example.com
+
+      vars:
+        ansible_user: root
+        # ansible_port: 22
+        # ansible_ssh_private_key_file: ~/.ssh/id_ed25519
+        # ansible_become_password: "{{ vault_become_password }}"
