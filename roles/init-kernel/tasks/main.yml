@@ -18,7 +18,7 @@
 # Rocky/RHEL 也一并配置，确保一致性。
 # =============================================================================
 
-- name: 提取 nofile hard 限制值
+- name: 提取 nofile/nproc hard 限制值
   ansible.builtin.set_fact:
     _ops_nofile_hard: "{{ (ops_limits | selectattr('item', 'equalto', 'nofile') | selectattr('type', 'equalto', 'hard') | first).value }}"
     _ops_nproc_hard: "{{ (ops_limits | selectattr('item', 'equalto', 'nproc') | selectattr('type', 'equalto', 'hard') | first).value }}"
@@ -54,6 +54,40 @@
     line: "DefaultLimitNPROC={{ _ops_nproc_hard }}:{{ _ops_nproc_hard }}"
     insertafter: '^\[Manager\]'
   notify: Reload systemd
+
+# =============================================================================
+# SSH 服务 systemd override
+# sshd 进程的硬限制决定了 PAM pam_limits.so 能设置的上限。
+# 必须通过 systemd override 确保 sshd 进程自身有足够高的限制，
+# 否则 PAM 无法将登录会话的限制提升到超过 sshd 进程的硬限制。
+# =============================================================================
+
+- name: 获取 SSH 服务名
+  ansible.builtin.set_fact:
+    _ops_ssh_service: "{{ 'ssh' if ansible_os_family == 'Debian' else 'sshd' }}"
+
+- name: 创建 SSH 服务 systemd override 目录
+  ansible.builtin.file:
+    path: "/etc/systemd/system/{{ _ops_ssh_service }}.service.d"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: 部署 SSH 服务资源限制 override
+  ansible.builtin.copy:
+    content: |
+      # Managed by ops-os-init — 确保 sshd 进程有足够高的资源限制
+      [Service]
+      LimitNOFILE={{ _ops_nofile_hard }}:{{ _ops_nofile_hard }}
+      LimitNPROC={{ _ops_nproc_hard }}:{{ _ops_nproc_hard }}
+    dest: "/etc/systemd/system/{{ _ops_ssh_service }}.service.d/limits.conf"
+    owner: root
+    group: root
+    mode: "0644"
+  notify:
+    - Reload systemd
+    - Restart sshd for limits
 
 # =============================================================================
 # PAM pam_limits.so 确认（Debian 系）
