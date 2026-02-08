@@ -3,7 +3,7 @@
 
 [baseos]
 name=Rocky Linux $releasever - BaseOS
-baseurl={{ ops_rocky_mirror }}/rocky/$releasever/BaseOS/$basearch/os/
+baseurl={{ ops_rocky_mirror }}/pub/rocky/$releasever/BaseOS/$basearch/os/
 gpgcheck=1
 enabled=1
 countme=1
@@ -12,7 +12,7 @@ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
 
 [appstream]
 name=Rocky Linux $releasever - AppStream
-baseurl={{ ops_rocky_mirror }}/rocky/$releasever/AppStream/$basearch/os/
+baseurl={{ ops_rocky_mirror }}/pub/rocky/$releasever/AppStream/$basearch/os/
 gpgcheck=1
 enabled=1
 countme=1
@@ -21,7 +21,7 @@ gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-Rocky-9
 
 [extras]
 name=Rocky Linux $releasever - Extras
-baseurl={{ ops_rocky_mirror }}/rocky/$releasever/extras/$basearch/os/
+baseurl={{ ops_rocky_mirror }}/pub/rocky/$releasever/extras/$basearch/os/
 gpgcheck=1
 enabled=1
 countme=1
