@@ -134,6 +134,12 @@ ops_users:
     home_mode: "0750"
 
 # --- 定时任务（追加 cdnops）---
+# --- Cloud Boot（CDN 节点管理）---
+ops_cloud_boot_enabled: true
+
+# --- 安全环境变量（CDN 节点放宽 umask，允许服务进程访问）---
+ops_umask: "002"
+
 ops_cron_allow_users:
   - root
   - op

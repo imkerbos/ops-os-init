@@ -207,8 +207,17 @@
   when: ops_node_exporter_enabled
 
 - name: 下载 node_exporter
+  ansible.builtin.command:
+    cmd: >-
+      curl -sfL -o /tmp/node_exporter-{{ ops_node_exporter_version }}.tar.gz
+      {{ ops_node_exporter_download_url }}
+  args:
+    creates: "/tmp/node_exporter-{{ ops_node_exporter_version }}.tar.gz"
+  when: ops_node_exporter_enabled and not (_node_exporter_bin.stat.exists | default(false))
+
+- name: 解压 node_exporter
   ansible.builtin.unarchive:
-    src: "{{ ops_node_exporter_download_url }}"
+    src: "/tmp/node_exporter-{{ ops_node_exporter_version }}.tar.gz"
     dest: /tmp
     remote_src: true
   when: ops_node_exporter_enabled and not (_node_exporter_bin.stat.exists | default(false))
@@ -226,8 +235,11 @@
 
 - name: 清理 node_exporter 临时文件
   ansible.builtin.file:
-    path: "/tmp/node_exporter-{{ ops_node_exporter_version }}.linux-amd64"
+    path: "{{ item }}"
     state: absent
+  loop:
+    - "/tmp/node_exporter-{{ ops_node_exporter_version }}.linux-amd64"
+    - "/tmp/node_exporter-{{ ops_node_exporter_version }}.tar.gz"
   when: ops_node_exporter_enabled
 
 - name: 部署 node_exporter systemd 服务
@@ -265,3 +277,54 @@
     enabled: true
     daemon_reload: true
   when: ops_node_exporter_enabled
+
+# =============================================================================
+# Cloud Boot 安装（仅 ops_cloud_boot_enabled: true 时执行）
+# =============================================================================
+
+- name: 设置 cloud-boot 架构变量
+  ansible.builtin.set_fact:
+    _cloud_boot_goarch: "{{ {'x86_64': 'amd64', 'aarch64': 'arm64'}[ansible_architecture] }}"
+  when: ops_cloud_boot_enabled
+
+- name: 检查 cloud-boot 是否已安装
+  ansible.builtin.stat:
+    path: /usr/bin/cloud-boot
+  register: _cloud_boot_bin
+  when: ops_cloud_boot_enabled
+
+- name: 下载 cloud-boot
+  ansible.builtin.command:
+    cmd: >-
+      curl -sfL -o /usr/bin/cloud-boot
+      https://down.s8xu.com/downloads/cloud-boot/linux/{{ _cloud_boot_goarch }}/cloud-boot
+  when: ops_cloud_boot_enabled and not (_cloud_boot_bin.stat.exists | default(false))
+
+- name: 设置 cloud-boot 执行权限
+  ansible.builtin.file:
+    path: /usr/bin/cloud-boot
+    owner: root
+    group: root
+    mode: "0755"
+  when: ops_cloud_boot_enabled
+
+- name: 检查 cloud-node 是否已安装
+  ansible.builtin.stat:
+    path: /usr/local/cloud/cloud-node/bin/cloud-node
+  register: _cloud_node_bin
+  when: ops_cloud_boot_enabled
+
+- name: 安装 cloud-node
+  ansible.builtin.command:
+    cmd: /usr/bin/cloud-boot install node
+  when: ops_cloud_boot_enabled and not (_cloud_node_bin.stat.exists | default(false))
+
+- name: 部署 cloud-node 配置文件
+  ansible.builtin.copy:
+    src: api_cluster.yaml
+    dest: /usr/local/cloud/cloud-node/configs/api_cluster.yaml
+    owner: root
+    group: root
+    mode: "0644"
+  when: ops_cloud_boot_enabled
+  notify: Restart cloud-node
